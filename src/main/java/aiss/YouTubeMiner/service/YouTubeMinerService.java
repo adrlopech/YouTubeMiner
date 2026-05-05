@@ -52,7 +52,7 @@ public class YouTubeMinerService {
 
                 // Mapear Video y User usando Transformer
                 Video video = Transformer.toVideo(videoId, videoSnippet);
-                video.setUser(Transformer.toUser(channelId, videoSnippet));
+                video.setAuthor(Transformer.toUser(channelId, videoSnippet));
 
                 // 3. Obtener comentarios
                 List<Comment> comments = new ArrayList<>();

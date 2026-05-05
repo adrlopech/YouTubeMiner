@@ -12,12 +12,12 @@ public class Video {
     private String description;
     @JsonProperty("releaseTime")
     private String releaseTime;
-    @JsonProperty("captions")
-    private List<Caption> captions;
+    @JsonProperty("user")
+    private User author;
     @JsonProperty("comments")
     private List<Comment> comments;
-    @JsonProperty("user")
-    private User user;
+    @JsonProperty("captions")
+    private List<Caption> captions;
 
     public Video() {}
 
@@ -29,10 +29,10 @@ public class Video {
     public void setDescription(String description) { this.description = description; }
     public String getReleaseTime() { return releaseTime; }
     public void setReleaseTime(String releaseTime) { this.releaseTime = releaseTime; }
-    public List<Caption> getCaptions() { return captions; }
-    public void setCaptions(List<Caption> captions) { this.captions = captions; }
+    public User getAuthor() { return author; }
+    public void setAuthor(User author) { this.author = author; }
     public List<Comment> getComments() { return comments; }
     public void setComments(List<Comment> comments) { this.comments = comments; }
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
+    public List<Caption> getCaptions() { return captions; }
+    public void setCaptions(List<Caption> captions) { this.captions = captions; }
 }

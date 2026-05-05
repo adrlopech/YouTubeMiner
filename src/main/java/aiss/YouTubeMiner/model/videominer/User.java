@@ -4,22 +4,22 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class User {
     @JsonProperty("id")
-    private String id;
+    private Long id;
     @JsonProperty("name")
     private String name;
     @JsonProperty("user_link")
-    private String userLink;
+    private String user_link;
     @JsonProperty("picture_link")
-    private String pictureLink;
+    private String picture_link;
 
     public User() {}
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-    public String getUserLink() { return userLink; }
-    public void setUserLink(String userLink) { this.userLink = userLink; }
-    public String getPictureLink() { return pictureLink; }
-    public void setPictureLink(String pictureLink) { this.pictureLink = pictureLink; }
+    public String getUser_link() { return user_link; }
+    public void setUser_link(String user_link) { this.user_link = user_link; }
+    public String getPicture_link() { return picture_link; }
+    public void setPicture_link(String picture_link) { this.picture_link = picture_link; }
 }

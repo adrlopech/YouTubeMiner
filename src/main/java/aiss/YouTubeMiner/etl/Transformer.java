@@ -1,8 +1,6 @@
 package aiss.YouTubeMiner.etl;
 
 import aiss.YouTubeMiner.model.videominer.*;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 public class Transformer {
@@ -21,20 +19,20 @@ public class Transformer {
         video.setId(videoId);
         video.setName((String) videoSnippet.get("title"));
         video.setDescription((String) videoSnippet.get("description"));
-        video.setReleaseTime((String) videoSnippet.get("publishedAt"));
+        video.setReleaseTime((String) videoSnippet.get("publishedAt") != null ? (String) videoSnippet.get("publishedAt") : "Unknown");
         return video;
     }
 
     public static User toUser(String channelId, Map videoSnippet) {
         User user = new User();
-        user.setId((String) videoSnippet.get("channelId"));
+        user.setId(null); // VideoMiner lo genera automáticamente
         user.setName((String) videoSnippet.get("channelTitle"));
-        user.setUserLink("https://www.youtube.com/channel/" + channelId);
+        user.setUser_link("https://www.youtube.com/channel/" + channelId);
         Map thumbnails = (Map) videoSnippet.get("thumbnails");
         if (thumbnails != null) {
             Map defaultThumb = (Map) thumbnails.get("default");
             if (defaultThumb != null) {
-                user.setPictureLink((String) defaultThumb.get("url"));
+                user.setPicture_link((String) defaultThumb.get("url"));
             }
         }
         return user;
@@ -57,8 +55,8 @@ public class Transformer {
 
         Caption caption = new Caption();
         caption.setId((String) captionItem.get("id"));
+        caption.setName("https://www.youtube.com/watch?v=" + videoId);
         caption.setLanguage((String) captionSnippet.get("language"));
-        caption.setLink("https://www.youtube.com/watch?v=" + videoId);
         return caption;
     }
 }
