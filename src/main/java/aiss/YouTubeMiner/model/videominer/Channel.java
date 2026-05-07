@@ -1,19 +1,37 @@
 package aiss.YouTubeMiner.model.videominer;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "Channel")
 public class Channel {
+
+    @Id
     @JsonProperty("id")
     private String id;
+
     @JsonProperty("name")
+    @NotEmpty(message = "Channel name cannot be empty")
     private String name;
+
     @JsonProperty("description")
+    @Column(columnDefinition="TEXT")
     private String description;
+
     @JsonProperty("createdTime")
+    @NotEmpty(message = "Channel creation time cannot be empty")
     private String createdTime;
+
     @JsonProperty("videos")
-    private List<Video> videos;
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "channelId")
+    @NotNull(message = "Channel videos cannot be null")
+    private List<Video> videos = new ArrayList<>();
 
     public Channel() {}
 

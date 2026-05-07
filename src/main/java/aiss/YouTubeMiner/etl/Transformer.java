@@ -1,62 +1,102 @@
 package aiss.YouTubeMiner.etl;
 
 import aiss.YouTubeMiner.model.videominer.*;
-import java.util.Map;
+import aiss.YouTubeMiner.model.youtube.*;
+import aiss.YouTubeMiner.service.YouTubeMinerService;
+import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
+
+@Component
 public class Transformer {
 
-    public static Channel toChannel(String channelId, Map snippet) {
+    private final YouTubeMinerService youtubeService;
+
+    public Transformer(YouTubeMinerService youtubeService) {
+        this.youtubeService = youtubeService;
+    }
+
+    public Channel buildChannel(String channelId, Integer maxVideos, Integer maxComments) {
+        YouTubeChannelList channelResponse = youtubeService.getChannel(channelId);
+
+        if (channelResponse == null || channelResponse.getItems() == null || channelResponse.getItems().isEmpty()) {
+            return null; // Canal no encontrado
+        }
+
+        YouTubeChannel ytChannel = channelResponse.getItems().get(0);
+        YouTubeChannel.YouTubeChannelSnippet snippet = ytChannel.getSnippet();
+
         Channel channel = new Channel();
         channel.setId(channelId);
-        channel.setName((String) snippet.get("title"));
-        channel.setDescription((String) snippet.get("description"));
-        channel.setCreatedTime((String) snippet.get("publishedAt"));
-        return channel;
-    }
+        channel.setName(snippet.getTitle());
+        channel.setDescription(snippet.getDescription());
+        channel.setCreatedTime(snippet.getPublishedAt() != null ? snippet.getPublishedAt() : "Unknown");
 
-    public static Video toVideo(String videoId, Map videoSnippet) {
-        Video video = new Video();
-        video.setId(videoId);
-        video.setName((String) videoSnippet.get("title"));
-        video.setDescription((String) videoSnippet.get("description"));
-        video.setReleaseTime((String) videoSnippet.get("publishedAt") != null ? (String) videoSnippet.get("publishedAt") : "Unknown");
-        return video;
-    }
+        YouTubeVideoList videosResponse = youtubeService.getVideosFromChannel(channelId, maxVideos);
+        List<Video> videos = new ArrayList<>();
 
-    public static User toUser(String channelId, Map videoSnippet) {
-        User user = new User();
-        user.setId(null); // VideoMiner lo genera automáticamente
-        user.setName((String) videoSnippet.get("channelTitle"));
-        user.setUser_link("https://www.youtube.com/channel/" + channelId);
-        Map thumbnails = (Map) videoSnippet.get("thumbnails");
-        if (thumbnails != null) {
-            Map defaultThumb = (Map) thumbnails.get("default");
-            if (defaultThumb != null) {
-                user.setPicture_link((String) defaultThumb.get("url"));
+        if (videosResponse != null && videosResponse.getItems() != null) {
+            for (YouTubeVideo ytVideo : videosResponse.getItems()) {
+                String videoId = ytVideo.getId().getVideoId();
+                YouTubeVideo.YouTubeVideoSnippet vSnippet = ytVideo.getSnippet();
+
+                Video video = new Video();
+                video.setId(videoId);
+                video.setName(vSnippet.getTitle());
+                video.setDescription(vSnippet.getDescription());
+                video.setReleaseTime(vSnippet.getPublishedAt() != null ? vSnippet.getPublishedAt() : "Unknown");
+
+                // Mapear Usuario
+                User user = new User();
+                user.setName(vSnippet.getChannelTitle());
+                user.setUser_link("https://www.youtube.com/channel/" + vSnippet.getChannelId());
+                if (vSnippet.getThumbnails() != null && vSnippet.getThumbnails().getDefaultThumbnail() != null) {
+                    user.setPicture_link(vSnippet.getThumbnails().getDefaultThumbnail().getUrl());
+                }
+                video.setAuthor(user);
+
+                // Mapear Comentarios
+                List<Comment> comments = new ArrayList<>();
+                try {
+                    YouTubeCommentList commentsResponse = youtubeService.getComments(videoId, maxComments);
+                    if (commentsResponse != null && commentsResponse.getItems() != null) {
+                        for (YouTubeComment ytComment : commentsResponse.getItems()) {
+                            YouTubeComment.TopLevelCommentSnippet cSnippet = ytComment.getSnippet().getTopLevelComment().getSnippet();
+                            Comment comment = new Comment();
+                            comment.setId(ytComment.getId());
+                            comment.setText(cSnippet.getTextDisplay());
+                            comment.setCreatedOn(cSnippet.getPublishedAt());
+                            comments.add(comment);
+                        }
+                    }
+                } catch (Exception e) {
+                    System.out.println("Comentarios desactivados para el video: " + videoId);
+                }
+                video.setComments(comments);
+
+                // Mapear Subtítulos
+                List<Caption> captions = new ArrayList<>();
+                try {
+                    YouTubeCaptionList captionsResponse = youtubeService.getCaptions(videoId);
+                    if (captionsResponse != null && captionsResponse.getItems() != null) {
+                        for (YouTubeCaption ytCaption : captionsResponse.getItems()) {
+                            Caption caption = new Caption();
+                            caption.setId(ytCaption.getId());
+                            caption.setName("https://www.youtube.com/watch?v=" + videoId);
+                            caption.setLanguage(ytCaption.getSnippet().getLanguage());
+                            captions.add(caption);
+                        }
+                    }
+                } catch (Exception e) {
+                    System.out.println("Subtítulos no disponibles para el video: " + videoId);
+                }
+                video.setCaptions(captions);
+
+                videos.add(video);
             }
         }
-        return user;
-    }
-
-    public static Comment toComment(Map commentItem) {
-        Map commentSnippet = (Map) commentItem.get("snippet");
-        Map topLevel = (Map) commentSnippet.get("topLevelComment");
-        Map topSnippet = (Map) topLevel.get("snippet");
-
-        Comment comment = new Comment();
-        comment.setId((String) topLevel.get("id"));
-        comment.setText((String) topSnippet.get("textDisplay"));
-        comment.setCreatedOn((String) topSnippet.get("publishedAt"));
-        return comment;
-    }
-
-    public static Caption toCaption(String videoId, Map captionItem) {
-        Map captionSnippet = (Map) captionItem.get("snippet");
-
-        Caption caption = new Caption();
-        caption.setId((String) captionItem.get("id"));
-        caption.setName("https://www.youtube.com/watch?v=" + videoId);
-        caption.setLanguage((String) captionSnippet.get("language"));
-        return caption;
+        channel.setVideos(videos);
+        return channel;
     }
 }

@@ -1,14 +1,23 @@
 package aiss.YouTubeMiner.model.videominer;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.*;
 
+@Entity
+@Table(name = "VMUser")
 public class User {
+
+    @Id
     @JsonProperty("id")
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+
     @JsonProperty("name")
     private String name;
+
     @JsonProperty("user_link")
     private String user_link;
+
     @JsonProperty("picture_link")
     private String picture_link;
 

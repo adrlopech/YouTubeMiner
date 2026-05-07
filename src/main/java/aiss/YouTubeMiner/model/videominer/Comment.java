@@ -1,12 +1,20 @@
 package aiss.YouTubeMiner.model.videominer;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.*;
 
+@Entity
+@Table(name = "Comment")
 public class Comment {
+
+    @Id
     @JsonProperty("id")
     private String id;
+
     @JsonProperty("text")
+    @Column(columnDefinition="TEXT")
     private String text;
+
     @JsonProperty("createdOn")
     private String createdOn;
 
